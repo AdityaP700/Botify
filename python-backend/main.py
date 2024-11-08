@@ -1,27 +1,42 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from groq import Groq
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
+import pymongo
 import os
 from dotenv import load_dotenv
+import datetime  # Import datetime
+import random
 
 load_dotenv()
 
-# MongoDB connection
-
+# MongoDB connection with SSL settings
 uri = os.getenv("MONGO_DB_URI")
 
-client = MongoClient(uri, server_api=ServerApi('1'))
-#db = client.your_database_name  # Replace with your actual database name
+client = pymongo.MongoClient(
+    uri,
+    tls=True,                     # Correct SSL/TLS option
+    tlsAllowInvalidCertificates=True,  # Use in development only, not recommended for production
+    serverSelectionTimeoutMS=5000
+)
+
+try:
+    # Test the connection
+    client.admin.command('ping')
+    print("Successfully connected to MongoDB")
+except Exception as e:
+    print(f"MongoDB connection error: {e}")
+    raise
+
+db = client["ecommerce"]
+collection = db["products"]
 
 # GROQ client
 groq_client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
 
-
-app = FastAPI()
+# Create FastAPI app instance
+app = FastAPI(title="GROQ API with MongoDB")
 
 class PromptRequest(BaseModel):
     prompt: str
@@ -57,14 +72,14 @@ async def generate_groq_response(request: PromptRequest):
             stop=request.stop_sequences
         )
 
-        # Save the generated text to MongoDB
-        #db.your_collection_name.insert_one({"prompt": request.prompt, "response": generated_text})
-
-        return {"result": response.choices[0].message}
     except Exception as e:
-        print(f"Error calling GROQ: {e}")
-        return {"error": str(e)}, 500
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Add health check endpoint
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
