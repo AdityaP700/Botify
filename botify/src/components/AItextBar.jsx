@@ -1,13 +1,10 @@
 // import React, { useState } from 'react';
-
-
 // const msgArray = [
 //     {
 //         id: 1,
 //         text: "hello world, this is my first text"
 //     }
 // ];
-
 // function AItextBar({ messageList, setMessageList }) {
 //     const [inputText, setInputText] = useState('');
 //     const [loading, setLoading] = useState(false);
@@ -74,5 +71,4 @@
 //         </div>
 //     );
 // }
-
 // export default AItextBar;
