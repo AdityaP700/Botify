@@ -3,16 +3,23 @@ from pydantic import BaseModel
 from groq import Groq
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # MongoDB connection
-uri = "mongodb+srv://divyanshushekhar987:dfLgt7Op3DalQW0A@cluster0.yr2fg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+
+uri = os.getenv("MONGO_DB_URI")
+
 client = MongoClient(uri, server_api=ServerApi('1'))
-db = client.your_database_name  # Replace with your actual database name
+#db = client.your_database_name  # Replace with your actual database name
 
 # GROQ client
 groq_client = Groq(
-    api_key="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"
+    api_key=os.getenv("GROQ_API_KEY")
 )
+
 
 app = FastAPI()
 
@@ -51,9 +58,9 @@ async def generate_groq_response(request: PromptRequest):
         )
 
         # Save the generated text to MongoDB
-        db.your_collection_name.insert_one({"prompt": request.prompt, "response": generated_text})
+        #db.your_collection_name.insert_one({"prompt": request.prompt, "response": generated_text})
 
-        return {"result": generated_text}
+        return {"result": response.choices[0].message}
     except Exception as e:
         print(f"Error calling GROQ: {e}")
         return {"error": str(e)}, 500
