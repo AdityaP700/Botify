@@ -1,14 +1,20 @@
-import os
 from fastapi import FastAPI
 from pydantic import BaseModel
 from groq import Groq
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 
-app = FastAPI()
+# MongoDB connection
+uri = "mongodb+srv://divyanshushekhar987:dfLgt7Op3DalQW0A@cluster0.yr2fg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+client = MongoClient(uri, server_api=ServerApi('1'))
+db = client.your_database_name  # Replace with your actual database name
 
-# Initialize the GROQ client
-client = Groq(
+# GROQ client
+groq_client = Groq(
     api_key="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"
 )
+
+app = FastAPI()
 
 class PromptRequest(BaseModel):
     prompt: str
@@ -20,7 +26,8 @@ class PromptRequest(BaseModel):
 @app.post("/groq")
 async def generate_groq_response(request: PromptRequest):
     try:
-        chat_completion = client.chat.completions.create(
+        # Generate response using GROQ
+        response = groq_client.chat.completions.create(
             model="llama-3.2-11b-text-preview",
             messages=[
                 {
@@ -43,9 +50,10 @@ async def generate_groq_response(request: PromptRequest):
             stop=request.stop_sequences
         )
 
-        return {"res":chat_completion.choices[0].message}
+        # Save the generated text to MongoDB
+        db.your_collection_name.insert_one({"prompt": request.prompt, "response": generated_text})
 
-        
+        return {"result": generated_text}
     except Exception as e:
         print(f"Error calling GROQ: {e}")
         return {"error": str(e)}, 500

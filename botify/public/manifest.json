@@ -14,15 +14,12 @@
         "*://www.amazon.com/*",
         "*://www.flipkart.com/*"
       ],
-      "js": ["content.js"],
-      "css": ["styles.css"]
+      "js": ["botify/src/index.js"],
+      "css": ["botify/src/index.css"]
     }
   ],
-  "background": {
-    "service_worker": "background.js"
-  },
   "action": {
     "default_popup": "index.html",
-    "default_icon": "icon.png"
+    "default_icon": "image.png"
   }
 }
