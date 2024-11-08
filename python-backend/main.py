@@ -6,6 +6,9 @@ import os
 from dotenv import load_dotenv
 import datetime  # Import datetime
 import random
+from pinecone import Pinecone, ServerlessSpec
+
+pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
 
 load_dotenv()
 

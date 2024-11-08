@@ -14,8 +14,8 @@
         "*://www.amazon.com/*",
         "*://www.flipkart.com/*"
       ],
-      "js": ["static/js/main.1831ef9d.js"],
-      "css": ["static/css/main.c060a06f.css"]
+      "js": ["botify/src/index.js"],
+      "css": ["botify/src/index.css"]
     }
   ],
   "action": {
