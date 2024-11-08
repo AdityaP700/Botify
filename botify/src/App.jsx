@@ -1,15 +1,10 @@
 import './App.css';
-
+import Preview from './components/Preview';
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          nnnddddss <code>s</code> and save to reload.
-        </p>
-          Learn React
-      </header>
-    </div>
+    <div className="App min-w-[400px] min-h-[600px] w-full h-full flex items-center justify-center">
+  <Preview/>
+  </div>
   );
 }
 

@@ -7,8 +7,8 @@ const Preview = () => {
   return (
     <div className="w-full min-h-screen bg-blue-500">
       <Header />
-      <Messaging />
-      <Footer />
+      {/* <Messaging />
+      <Footer /> */}
     </div>
   );
 };
