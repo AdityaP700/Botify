@@ -5,10 +5,9 @@ function App() {
     <div className="App">
       <header className="App-header">
         <p>
-          Edit <code>src/App.js</code> and save to reload.
+           <code>s</code> and save to reload.
         </p>
           Learn React
-      
       </header>
     </div>
   );
