@@ -1,5 +1,5 @@
 // import React, { useState } from 'react';
-// import Groq from "groq-sdk";
+
 
 // const msgArray = [
 //     {
@@ -24,46 +24,7 @@
 
 //     //     const newMessageList = [...messageList, formattedInput];
 //     //     setMessageList(newMessageList);
-//     //     try {
-//     //         const groq = new Groq({
-//     //             apiKey: import.meta.env.VITE_GROQ_API_KEY,
-//     //             dangerouslyAllowBrowser: true
-//     //         });
 
-//     //         const chatCompletion = await groq.chat.completions.create({
-//     //             messages: [
-//     //                 {
-//     //                     role: "user",
-//     //                     content: inputText
-//     //                 }
-//     //             ],
-//     //             model: "llama-3.2-11b-vision-preview",
-//     //             temperature: 1,
-//     //             max_tokens: 1024,
-//     //             top_p: 1,
-//     //             stream: false,
-//     //             stop: null
-//     //         });
-
-
-//     //         const response = chatCompletion.choices[0].message.content;
-
-//     //         const formattedResponse = {
-//     //             type: 'ai',
-//     //             name: 'Cosima AI',
-//     //             text: response,
-//     //             timestamp: `${new Date().getHours()}:${new Date().getMinutes()}`,
-//     //             avatar: '/api/placeholder/32/32'
-//     //         }
-
-//     //         setMessageList([...newMessageList, formattedResponse])
-//     //         setInputText(''); // Clear input after successful submission
-
-//     //     } catch (error) {
-//     //         alert(`Error: ${error.message || 'Failed to get response'}`);
-//     //     } finally {
-//     //         setLoading(false);
-//     //     }
 //     // };
 
 //     const handleKeyPress = (e) => {
