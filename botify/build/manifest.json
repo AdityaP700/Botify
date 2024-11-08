@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Botify Chatbot",
+  "version": "1.0",
+  "description": "Chatbot extension for e-commerce websites like Amazon and Flipkart.",
+  "permissions": ["cookies", "activeTab", "storage", "scripting", "tabs"],
+  "host_permissions": [
+    "https://www.amazon.com/*",
+    "https://www.flipkart.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://www.amazon.com/*",
+        "*://www.flipkart.com/*"
+      ],
+      "js": ["static/js/main.b76ef1b0.js"],
+      "css": ["static/css/main.f855e6bc.css"]
+    }
+  ],
+
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": "image.png"
+  }
+}
