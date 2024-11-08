@@ -5,7 +5,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <p>
-           <code>s</code> and save to reload.
+          nnnddddss <code>s</code> and save to reload.
         </p>
           Learn React
       </header>

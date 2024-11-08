@@ -14,11 +14,10 @@
         "*://www.amazon.com/*",
         "*://www.flipkart.com/*"
       ],
-      "js": ["static/js/main.b76ef1b0.js"],
-      "css": ["static/css/main.f855e6bc.css"]
+      "js": ["src/index.js"],
+      "css": ["src/index.css"]
     }
   ],
-
   "action": {
     "default_popup": "index.html",
     "default_icon": "image.png"
