@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
+import axios from 'axios';
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState([]);
@@ -25,25 +26,45 @@ const ChatInterface = () => {
       sender: 'user',
       timestamp: new Date().toLocaleTimeString()
     };
-    
+
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
 
-    // Simulate bot response after a delay
-    setTimeout(() => {
+    try {
+      // Make a POST request to the GROQ API
+      const response = await axios.post("http://localhost:8000/groq", {
+        prompt: inputValue,
+        max_tokens: 500,
+        temperature: 0.7,
+        top_p: 0.9,
+        stop_sequences: ["Human:", "Assistant:"]
+      });
+      alert.message("response is*****",response.data.msg)
+
+      // Add the response from the assistant to the messages
       const botMessage = {
-        text: `Thanks for your message: "${inputValue}"`,
+        text: response.data,  // Updated to match the new response format
         sender: 'bot',
         timestamp: new Date().toLocaleTimeString()
       };
       setMessages(prev => [...prev, botMessage]);
+
+    } catch (error) {
+      console.error("Error fetching response from GROQ API:", error);
+      const errorMessage = {
+        text: "Sorry, something went wrong. Please try again.",
+        sender: 'bot',
+        timestamp: new Date().toLocaleTimeString()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
-    <div className="flex flex-col h-96 w-80 border rounded-lg shadow-lg bg-white">
+    <div className="flex flex-col w-full h-full border rounded-lg shadow-lg bg-white">
       {/* Chat header */}
       <div className="px-4 py-3 bg-blue-600 text-white rounded-t-lg">
         <h2 className="text-lg font-semibold">Chatbot</h2>
