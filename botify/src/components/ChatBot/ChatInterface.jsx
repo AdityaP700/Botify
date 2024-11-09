@@ -40,7 +40,7 @@ const ChatInterface = () => {
     };
 
     return (
-        <div className="flex flex-col h-96 w-80 border rounded-lg shadow-lg bg-gray-800">
+        <div className="flex flex-col w-full h-full border rounded-lg shadow-lg bg-gray-800">
             {/* Chat header */}
             <div className="px-4 py-3 bg-purple-700 text-white rounded-t-lg">
                 <h2 className="text-lg font-semibold">Chatbot</h2>

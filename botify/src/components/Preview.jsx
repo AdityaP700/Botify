@@ -7,7 +7,7 @@ import ChatInterface from './ChatBot/ChatInterface';
 
 const Preview = () => {
   return (
-    <div className="w-full min-h-screen bg-blue-500">
+    <div className="w-full h-full bg-blue-500">
 
       <ChatInterface/>
     </div>
