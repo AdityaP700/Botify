@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
-import axios from 'axios';
+
+
+const axios = require('axios').default;
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState([]);
@@ -32,26 +33,44 @@ const ChatInterface = () => {
     setIsLoading(true);
 
     try {
-      // Make a POST request to the GROQ API
-      const response = await axios.post("http://localhost:8000/groq", {
+      console.log('Sending request with prompt:', inputValue);
+      
+      const {data} = await axios.post("http://localhost:8000/groq", {
         prompt: inputValue,
         max_tokens: 500,
         temperature: 0.7,
         top_p: 0.9,
         stop_sequences: ["Human:", "Assistant:"]
+      },{
+        headers: {
+          'Content-Type': 'application/json' // Set the Content-Type header
+      }
       });
-      alert.message("response is*****",response.data.msg)
+
+      alert('Raw response:', data);
+
+      if (data) {
+        throw new Error('No message in response');
+      }
 
       // Add the response from the assistant to the messages
       const botMessage = {
-        text: response.data,  // Updated to match the new response format
+        text: data,  // Using the correct key
         sender: 'bot',
         timestamp: new Date().toLocaleTimeString()
       };
+      
+      console.log('Adding bot message:', botMessage.data);
       setMessages(prev => [...prev, botMessage]);
+      console.log(messages)
 
     } catch (error) {
-      console.error("Error fetching response from GROQ API:", error);
+      console.error("Error details:", {
+        message: 'gogo',
+        response: error.response?.data,
+        status: error.response?.status
+      });
+
       const errorMessage = {
         text: "Sorry, something went wrong. Please try again.",
         sender: 'bot',
@@ -78,13 +97,13 @@ const ChatInterface = () => {
             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-3/4 p-3 rounded-lg ${
+              className={`max-w-[75%] p-3 rounded-lg ${
                 message.sender === 'user'
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-200 text-gray-800'
               }`}
             >
-              <p className="text-sm">{message.text}</p>
+              <p className="text-sm break-words">{message.message}</p>
               <span className="text-xs opacity-75 block mt-1">
                 {message.timestamp}
               </span>
@@ -113,10 +132,10 @@ const ChatInterface = () => {
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             disabled={isLoading}
           >
-            <Send size={20} />
+
           </button>
         </div>
       </form>

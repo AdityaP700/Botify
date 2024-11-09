@@ -1,68 +1,83 @@
 import React, { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
 
 const ChatInterface = () => {
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef(null);
-
+  
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  
     useEffect(() => {
-        scrollToBottom();
+      scrollToBottom();
     }, [messages]);
-
+  
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!inputValue.trim()) return;
-
-        const userMessage = {
-            text: inputValue,
-            sender: 'user',
-            timestamp: new Date().toLocaleTimeString(),
-        };
-
-        setMessages((prev) => [...prev, userMessage]);
-        setInputValue('');
-        setIsLoading(true);
-
-        // Call the FastAPI endpoint to get the response from GROQ
-        try {
-            const response = await fetch("http://localhost:8000/groq", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    prompt: inputValue,
-                    max_tokens: 1024,
-                    temperature: 0.7,
-                    top_p: 0.9,
-                    stop_sequences: ["Human:", "Assistant:"],
-                }),
-            });
-
-            const data = await response.json();
-            
-            const botMessage = {
-                text: data.choices[0].message.content, // Adjust based on actual response structure
-                sender: 'bot',
-                timestamp: new Date().toLocaleTimeString(),
-            };
-
-            setMessages((prev) => [...prev, botMessage]);
-        } catch (error) {
-            console.error("Error fetching response:", error);
-            setMessages((prev) => [
-                ...prev,
-                { text: "Error fetching response", sender: 'bot', timestamp: new Date().toLocaleTimeString() },
-            ]);
-        } finally {
-            setIsLoading(false);
+      e.preventDefault();
+      if (!inputValue.trim()) return;
+  
+      // Add user message
+      const userMessage = {
+        text: inputValue,
+        sender: 'user',
+        timestamp: new Date().toLocaleTimeString()
+      };
+  
+      setMessages(prev => [...prev, userMessage]);
+      setInputValue('');
+      setIsLoading(true);
+  
+      try {
+        console.log('Sending request with prompt:', inputValue);
+        
+        const {data} = await axios.post("http://localhost:8000/groq", {
+          prompt: inputValue,
+          max_tokens: 500,
+          temperature: 0.7,
+          top_p: 0.9,
+          stop_sequences: ["Human:", "Assistant:"]
+        },{
+          headers: {
+            'Content-Type': 'application/json' // Set the Content-Type header
         }
+        });
+  
+        if (!data) {
+          throw new Error('No message in response');
+        }
+  
+        // Add the response from the assistant to the messages
+        const botMessage = {
+          text: data,  // Using the correct key
+          sender: 'bot',
+          timestamp: new Date().toLocaleTimeString()
+        };
+        
+        console.log('Adding bot message:', botMessage.data);
+        setMessages(prev => [...prev, botMessage]);
+        console.log(messages)
+  
+      } catch (error) {
+        console.error("Error details:", {
+          message: 'gogo',
+          response: error.response?.data,
+          status: error.response?.status
+        });
+  
+        const errorMessage = {
+          text: "Sorry, something went wrong. Please try again.",
+          sender: 'bot',
+          timestamp: new Date().toLocaleTimeString()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
     };
+    
 
     return (
         <div className="flex flex-col w-full h-full border rounded-lg shadow-lg bg-gray-800">
