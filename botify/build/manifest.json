@@ -14,13 +14,8 @@
         "*://www.amazon.com/*",
         "*://www.flipkart.com/*"
       ],
-<<<<<<< HEAD
-      "js": ["static/js/main.1831ef9d.js"],
-      "css": ["static/css/main.c060a06f.css"]
-=======
       "js": ["src/index.js"],
       "css": ["src/index.css"]
->>>>>>> cc21844b558ef2cc6129bcd23f080bd0c4b55df1
     }
   ],
   "action": {
