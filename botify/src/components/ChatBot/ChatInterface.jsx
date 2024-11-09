@@ -21,22 +21,47 @@ const ChatInterface = () => {
         const userMessage = {
             text: inputValue,
             sender: 'user',
-            timestamp: new Date().toLocaleTimeString()
+            timestamp: new Date().toLocaleTimeString(),
         };
 
         setMessages((prev) => [...prev, userMessage]);
         setInputValue('');
         setIsLoading(true);
 
-        setTimeout(() => {
+        // Call the FastAPI endpoint to get the response from GROQ
+        try {
+            const response = await fetch("http://localhost:8000/groq", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    prompt: inputValue,
+                    max_tokens: 1024,
+                    temperature: 0.7,
+                    top_p: 0.9,
+                    stop_sequences: ["Human:", "Assistant:"],
+                }),
+            });
+
+            const data = await response.json();
+            
             const botMessage = {
-                text: `Thanks for your message: "${inputValue}"`,
+                text: data.choices[0].message.content, // Adjust based on actual response structure
                 sender: 'bot',
-                timestamp: new Date().toLocaleTimeString()
+                timestamp: new Date().toLocaleTimeString(),
             };
+
             setMessages((prev) => [...prev, botMessage]);
+        } catch (error) {
+            console.error("Error fetching response:", error);
+            setMessages((prev) => [
+                ...prev,
+                { text: "Error fetching response", sender: 'bot', timestamp: new Date().toLocaleTimeString() },
+            ]);
+        } finally {
             setIsLoading(false);
-        }, 1000);
+        }
     };
 
     return (
