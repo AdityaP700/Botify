@@ -1,2 +1,2 @@
 # Botify
-this is a chat bot to help users make decisions during shopping on e-commerce websites by suggesting them the best productor their use case, comparisions between similar products.
+This is a chat bot to help users make better decisions while shopping on e-commerce websites by suggesting them the best product for their use case, showing comparisions between similar products.
