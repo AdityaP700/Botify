@@ -78,7 +78,12 @@ async def generate_groq_response(request: PromptRequest):
         # Extract the actual message content from the response
         message_content = response.choices[0].message.content
         print(message_content)
-        return {"msg":message_content}
+        # return {
+        #     # "status": "success",
+        #     # "message": message_content  # Changed from "msg" to "message"
+            
+        # }
+        return message_content
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
