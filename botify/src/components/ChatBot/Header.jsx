@@ -1,25 +1,18 @@
-import React from 'react';
+import React from 'react'
+// import SwitchButton from './SwitchButton'
 
-const Header = () => {
+function Header() {
   return (
-    <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-blue-500 to-blue-400 text-white max-w-sm mx-auto shadow-md">
-      <div className="flex items-center space-x-3">
-        <img
-          src="https://via.placeholder.com/40" 
-          alt="Profile"
-          className="w-10 h-10 rounded-full"
-        />
-        <div>
-          <p className="text-sm">Chat with</p>
-          <p className="font-semibold">Atlas</p>
-        </div>
-      </div>
-      <div className="flex items-center space-x-2">
-        <button className="text-xl">⋮</button>
-        <button className="text-xl">⌄</button>
-      </div>
-    </div>
-  );
-};
+    <div className='flex flex-row px-2 py-4 bg-gray-900 rounded-3xl rounded-b-none justify-between align-middle border-b-[1px] border-b-gray-500'>
+      <div className='flex flex-row align-middle gap-x-3 ml-5 self-center '>
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#d37abc"><path d="m668-380 152-130 120 10-176 153 52 227-102-62-46-198Zm-94-292-42-98 46-110 92 217-96-9ZM294-287l126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM173-120l65-281L20-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-340Z" /></svg>
 
-export default Header;
+        <h3 className='font-semibold'>Ask AI</h3>
+      </div>
+
+
+    </div>
+  )
+}
+
+export default Header
