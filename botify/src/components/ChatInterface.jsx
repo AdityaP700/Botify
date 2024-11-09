@@ -6,43 +6,57 @@ const ChatInterface = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }
-
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
-
-    // Add user message
     const userMessage = {
-      text: inputValue,
-      sender: 'user',
-      timestamp: new Date().toLocaleTimeString()
+        text: inputValue,
+        sender: 'user',
+        timestamp: new Date().toLocaleTimeString(),
     };
-    
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
+    try {
+        const response = await fetch("http://localhost:8000/groq", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                prompt: inputValue,
+                max_tokens: 1024,
+                temperature: 0.7,
+                top_p: 0.9,
+                stop_sequences: ["Human:", "Assistant:"],
+            }),
+        })
+        const data = await response.json();      
+        const botMessage = {
+            text: data.choices[0].message.content, 
+            sender: 'bot',
+            timestamp: new Date().toLocaleTimeString(),
+        };
 
-    // Simulate bot response after a delay
-    setTimeout(() => {
-      const botMessage = {
-        text: `Thanks for your message: "${inputValue}"`,
-        sender: 'bot',
-        timestamp: new Date().toLocaleTimeString()
-      };
-      setMessages(prev => [...prev, botMessage]);
-      setIsLoading(false);
-    }, 1000);
-  };
+        setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+        console.error("Error fetching response:", error);
+        setMessages((prev) => [
+            ...prev,
+            { text: "Error fetching response", sender: 'bot', timestamp: new Date().toLocaleTimeString() },
+        ]);
+    } finally {
+        setIsLoading(false);
+    }
+};
 
-  return (
+return (
     <div className="flex flex-col h-96 w-80 border rounded-lg shadow-lg bg-white">
       {/* Chat header */}
       <div className="px-4 py-3 bg-blue-600 text-white rounded-t-lg">

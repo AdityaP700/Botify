@@ -1,12 +1,22 @@
-import pinecone
-from config.pinecone_config import init_pinecone
+import  os
+from pinecone import Pinecone, ServerlessSpec
 
-def upsert_to_pinecone(data):
-    init_pinecone()
-    index_name = "your_index_name"  # Ensure this index is created in Pinecone
+def init_pinecone():
+    pinecone_client = Pinecone(
+        api_key=os.environ.get("PINECONE_API_KEY")
+    )
 
-    if index_name not in pinecone.list_indexes():
-        pinecone.create_index(index_name, dimension=384)  # Adjust dimension as per embedding model
+    index_name = "your_index_name"  
 
-    index = pinecone.Index(index_name)
-    index.upsert(vectors=data)
+    if index_name not in pinecone_client.list_indexes().names():
+        pinecone_client.create_index(
+            name=index_name,
+            dimension=384,  
+            metric='cosine',  
+            spec=ServerlessSpec(
+                cloud="aws",   
+                region="us-west-2"  
+            )
+        )
+
+    return pinecone_client, pinecone_client.Index(index_name)

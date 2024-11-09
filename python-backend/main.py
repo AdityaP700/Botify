@@ -10,6 +10,15 @@ import random
 
 load_dotenv()
 
+from fastapi.middleware.cors import CORSMiddleware
+app = FastAPI(title="GROQ API with MongoDB and Pinecone")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 pinecone.init(api_key=os.getenv("PINECONE_API_KEY"), environment=os.getenv("PINECONE_ENVIRONMENT"))
 index_name = "your_index_name"  # Ensure this matches your Pinecone setup
 if index_name not in pinecone.list_indexes():
