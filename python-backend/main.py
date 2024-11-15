@@ -5,6 +5,7 @@ import pymongo
 import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
@@ -30,6 +31,7 @@ uri = os.getenv("MONGO_DB_URI")
 client = pymongo.MongoClient(
     uri,
     tls=True,
+    tlsAllowInvalidCertificates=True,
     tlsAllowInvalidCertificates=True,
     serverSelectionTimeoutMS=5000
 )
@@ -58,6 +60,8 @@ async def generate_groq_response(request: PromptRequest):
         response = groq_client.chat.completions.create(
             model="llama-3.2-11b-text-preview",
             messages=[
+                {"role": "system", "content": "You are a helpful AI assistant."},
+                {"role": "user", "content": request.prompt}
                 {"role": "system", "content": "You are a helpful AI assistant."},
                 {"role": "user", "content": request.prompt}
             ],

@@ -97,7 +97,7 @@ const ChatInterface = () => {
       }
 
       const botMessage = {
-        text: response.data,
+        text: response.data.response,
         sender: 'bot',
         timestamp: new Date().toISOString(),
       };
