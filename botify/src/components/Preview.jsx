@@ -1,14 +1,8 @@
 import React from 'react';
-import Header from './ChatBot/Header';
-import Messaging from './ChatBot/Messaging';
-import Footer from './ChatBot/Footer';
-import AItextBar from './AItextBar';
-import ChatInterface from './ChatBot/ChatInterface';
-
+import ChatInterface from './ChatInterface'; 
 const Preview = () => {
   return (
-    <div className="w-full h-full bg-blue-500">
-
+<div className="flex flex-col h-full w-full">
       <ChatInterface/>
     </div>
   );

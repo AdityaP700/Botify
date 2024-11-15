@@ -1,0 +1,1 @@
+chrome.runtime.onMessage.addListener(((e,t,r)=>{if("API_REQUEST"===e.type)return fetch("http://localhost:8000/groq",{method:"POST",headers:{"Content-Type":"application/json",Origin:chrome.runtime.getURL("")},body:JSON.stringify(e.data)}).then((e=>e.text())).then((e=>{r({success:!0,data:e})})).catch((e=>{console.error("Error:",e),r({success:!1,error:e.message})})),!0}));
