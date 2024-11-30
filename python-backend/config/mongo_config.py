@@ -1,5 +1,8 @@
 import os
+from dotenv import load_dotenv
 
-MONGO_URI = os.getenv("MONGO_URI")
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
-MONGO_COLLECTION_NAME = os.getenv("MONGO_COLLECTION_NAME")
+load_dotenv()
+
+MONGO_URI = os.environ.get("MONGO_DB_URI")
+MONGO_DB_NAME = "botify"
+MONGO_COLLECTION_NAME = "conversations"

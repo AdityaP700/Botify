@@ -1,116 +1,116 @@
+/* global chrome */
 import React, { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// API URL now includes /api/v1 prefix
+const API_URL = 'http://localhost:8000/api/v1';
 const isExtension = window.chrome && chrome.runtime && chrome.runtime.id;
 
 const ChatInterface = () => {
-  const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem('chatMessages');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
-  const audioRef = useRef(new Audio('/message.mp3'));
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }
+  };
 
   useEffect(() => {
     scrollToBottom();
-    localStorage.setItem('chatMessages', JSON.stringify(messages));
   }, [messages]);
 
-  const playMessageSound = () => {
-    audioRef.current.play().catch(e => console.log('Audio play failed:', e));
-  };
-
-  const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString('en-US', {
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: true
+  const handleExtensionRequest = async (endpoint, data) => {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { type: 'API_REQUEST', endpoint, data },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else if (!response || !response.success) {
+            reject(new Error(response?.error || 'Request failed'));
+          } else {
+            resolve(response.data);
+          }
+        }
+      );
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
-    setError(null);
 
-    const userMessage = {
-      text: inputValue,
-      sender: 'user',
-      timestamp: new Date().toISOString(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    const userMessage = inputValue.trim();
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setInputValue('');
     setIsLoading(true);
 
     try {
       let response;
-      
-      if (isExtension) {
-        // Use chrome.runtime.sendMessage in extension mode
-        response = await new Promise((resolve, reject) => {
-          chrome.runtime.sendMessage({
-            type: 'API_REQUEST',
-            data: {
-              prompt: inputValue,
-              max_tokens: 500,
-              temperature: 0.7,
-              top_p: 0.9,
-              stop_sequences: ["Human:", "Assistant:"],
-            }
-          }, response => {
-            if (response.success) {
-              resolve({ data: response.data });
-            } else {
-              reject(new Error(response.error));
-            }
-          });
-        });
+      // Check if it's a search query
+      if (userMessage.toLowerCase().startsWith('/search ')) {
+        const query = userMessage.slice(8); // Remove '/search ' prefix
+        const searchData = { query, top_k: 3 };
+        
+        if (isExtension) {
+          response = await handleExtensionRequest('/search', searchData);
+        } else {
+          const axiosResponse = await axios.post(
+            `${API_URL}/search`,
+            searchData,
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+          response = axiosResponse.data;
+        }
+
+        if (!response) {
+          throw new Error('No search results returned');
+        }
+
+        const searchResponse = Array.isArray(response) ? response.map(result => 
+          `Score: ${(result.score * 100).toFixed(1)}% - ${result.text}`
+        ).join('\n\n') : 'No results found';
+
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `Here are the search results:\n\n${searchResponse}`
+        }]);
       } else {
-        // Use axios in local mode
-        response = await axios.post(
-          "http://localhost:8000/groq",
-          {
-            prompt: inputValue,
-            max_tokens: 500,
-            temperature: 0.7,
-            top_p: 0.9,
-            stop_sequences: ["Human:", "Assistant:"],
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
+        // Regular chat message
+        const chatData = {
+          message: userMessage,
+          context: {
+            url: window.location.href,
+            title: document.title
           }
-        );
+        };
+
+        if (isExtension) {
+          response = await handleExtensionRequest('/chat', chatData);
+        } else {
+          const axiosResponse = await axios.post(
+            `${API_URL}/chat`,
+            chatData,
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+          response = axiosResponse.data;
+        }
+
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: response.response || 'No response received'
+        }]);
       }
-
-      const botMessage = {
-        text: response.data.response,
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-      };
-
-      setMessages(prev => [...prev, botMessage]);
-      playMessageSound();
-
     } catch (error) {
-      console.error("Error:", error);
-      setError(
-        error.response?.data?.message || error.message || 
-        "Sorry, something went wrong. Please try again."
-      );
+      console.error('Error:', error);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, there was an error processing your request: ' + error.message
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -131,49 +131,39 @@ const ChatInterface = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
                 className={`max-w-[80%] p-4 rounded-2xl shadow-sm ${
-                  message.sender === 'user'
+                  message.role === 'user'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-800'
+                    : message.content && message.content.startsWith('Sorry, there was an error')
+                      ? 'bg-red-100 text-red-600'
+                      : 'bg-gray-100 text-gray-800'
                 }`}
               >
                 <div className="prose prose-sm">
-                  <ReactMarkdown>{message.text}</ReactMarkdown>
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
                 </div>
-                <span className="text-xs opacity-75 block mt-2">
-                  {formatTimestamp(message.timestamp)}
-                </span>
               </div>
             </motion.div>
           ))}
           {isLoading && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               className="flex justify-start"
             >
               <div className="bg-gray-100 p-4 rounded-2xl shadow-sm">
                 <div className="flex space-x-2">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-        {error && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-red-100 text-red-600 p-4 rounded-lg text-sm"
-          >
-            {error}
-          </motion.div>
-        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -183,18 +173,15 @@ const ChatInterface = () => {
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            disabled={isLoading}
+            placeholder="Type a message or '/search query' to search..."
+            className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
           />
           <button
             type="submit"
-            className={`px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all ${
-              isLoading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none"
             disabled={isLoading}
           >
-            <Send size={20} />
+            Send
           </button>
         </div>
       </form>
