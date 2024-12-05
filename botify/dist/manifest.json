@@ -22,7 +22,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_popup": "index.html",
+    "default_popup": "popup.html",
     "default_icon": "icon.png"
   },
   "content_scripts": [
@@ -32,8 +32,7 @@
         "*://*.ebay.com/*",
         "*://*.flipkart.com/*"
       ],
-      "js": ["static/js/main.1220bf13.js"],
-      "css": ["static/css/main.62886d72.css"]
+      "js": ["popup.js"]
     }
   ],
   "icons": {

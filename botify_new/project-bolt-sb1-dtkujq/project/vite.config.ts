@@ -1,39 +1,63 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import { resolve } from 'path';
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      jsxRuntime: 'classic'
+    })
+  ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
+      '@': resolve(__dirname, './src')
+    }
   },
   build: {
+    outDir: 'dist',
+    emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'index.html'),
-        background: path.resolve(__dirname, 'src/background/background.ts'),
-        content: path.resolve(__dirname, 'src/content/content.ts'),
+        popup: resolve(__dirname, 'index.html'),
+        background: resolve(__dirname, 'src/background/background.ts')
       },
       output: {
         entryFileNames: (chunkInfo) => {
-          if (chunkInfo.name === 'background' || chunkInfo.name === 'content') {
+          if (chunkInfo.name === 'background') {
             return '[name].js';
           }
-          return 'assets/[name]-[hash].js';
+          return 'assets/js/[name]-[hash].js';
         },
-        chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]',
-      },
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name.split('.');
+          const ext = info[info.length - 1];
+          if (assetInfo.name === 'index.html') {
+            return 'popup.html';
+          }
+          if (ext === 'css') {
+            return 'assets/css/[name]-[hash].[ext]';
+          }
+          return 'assets/[name]-[hash].[ext]';
+        }
+      }
     },
     sourcemap: true,
-    outDir: 'dist',
-    emptyOutDir: true,
+    minify: false,
+    target: 'esnext',
+    cssCodeSplit: true,
+    modulePreload: {
+      polyfill: false
+    }
   },
   server: {
     port: 3000,
-    open: true,
-  },
+    proxy: {
+      '/chat': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  }
 });

@@ -1,14 +1,13 @@
 {
-  "name": "botify",
+  "name": "botify-extension",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "build": "tsc && vite build",
     "preview": "vite preview",
-    "build:extension": "vite build && copy public\\manifest.json dist\\"
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -62,6 +61,7 @@
     "vaul": "^1.1.1"
   },
   "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.23.4",
     "@types/chrome": "^0.0.260",
     "@types/node": "^20.11.19",
     "@types/react": "^18.2.55",

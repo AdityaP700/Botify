@@ -4,15 +4,41 @@ from pathlib import Path
 
 def load_environment():
     """Load environment variables from .env file"""
-    env_path = Path(__file__).parent / '.env'
-    load_dotenv(env_path)
+    # Print current directory for debugging
+    print(f"Current directory: {os.getcwd()}")
     
+    # Get the directory containing this script
+    current_dir = Path(__file__).parent
+    env_file = current_dir / '.ENV'
+    
+    print(f"Looking for env file at: {env_file}")
+    print(f"File exists: {env_file.exists()}")
+    
+    if not env_file.exists():
+        raise ValueError(f"Environment file not found at {env_file}")
+        
+    # Load the environment variables
+    load_dotenv(env_file)
+    
+    # Handle MongoDB URI variations
+    if not os.getenv('MONGODB_URI') and os.getenv('MONGO_DB_URI'):
+        os.environ['MONGODB_URI'] = os.getenv('MONGO_DB_URI')
+    
+    # Verify loaded variables
     required_vars = [
         'PINECONE_API_KEY',
         'OPENAI_API_KEY',
         'GROQ_API_KEY',
-        'MONGO_DB_URI'
+        'MONGODB_URI'
     ]
+    
+    print("\nChecking environment variables:")
+    for var in required_vars:
+        value = os.getenv(var)
+        if value:
+            print(f"{var}: {'*' * 5}{value[-5:] if value else 'Not Set'}")
+        else:
+            print(f"{var}: Not Set")
     
     missing_vars = [var for var in required_vars if not os.getenv(var)]
     if missing_vars:
@@ -20,8 +46,3 @@ def load_environment():
 
 if __name__ == "__main__":
     load_environment()
-    print("Environment variables loaded successfully!")
-    print(f"PINECONE_API_KEY: {'*' * 10}{os.getenv('PINECONE_API_KEY')[-5:]}")
-    print(f"OPENAI_API_KEY: {'*' * 10}{os.getenv('OPENAI_API_KEY')[-5:]}")
-    print(f"GROQ_API_KEY: {'*' * 10}{os.getenv('GROQ_API_KEY')[-5:]}")
-    print(f"MONGO_DB_URI: {'*' * 10}{os.getenv('MONGO_DB_URI')[-5:]}")

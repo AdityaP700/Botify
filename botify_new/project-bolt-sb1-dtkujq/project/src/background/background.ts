@@ -18,7 +18,7 @@ interface ApiResponse {
   error?: string;
 }
 
-const API_URL = 'http://localhost:8000/api/v1';
+const API_URL = 'http://localhost:8000';
 
 // Store for current tab's context
 let currentTabContext: TabContext | null = null;
@@ -65,24 +65,31 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
 });
 
 // Handle messages from content script and popup
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message.type === 'PAGE_DATA_UPDATED' && _sender.tab?.id) {
-    handlePageUpdate(_sender.tab.id).catch(console.error);
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('[Background] Message received:', request);
+
+  if (request.type === 'PAGE_DATA_UPDATED' && sender.tab?.id) {
+    handlePageUpdate(sender.tab.id).catch(console.error);
     return false;
   }
 
-  if (message.type === 'API_REQUEST') {
-    handleApiRequest(message)
-      .then(response => sendResponse({ success: true, data: response }))
-      .catch(error => sendResponse({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }));
+  if (request.type === 'API_REQUEST') {
+    // Important: Return true to indicate we will send a response asynchronously
+    (async () => {
+      try {
+        const response = await handleApiRequest(request);
+        console.log('[Background] Sending success response:', response);
+        sendResponse(response);
+      } catch (error) {
+        console.error('[Background] Error in message handler:', error);
+        sendResponse({ error: error instanceof Error ? error.message : String(error) });
+      }
+    })();
     return true;
   }
 
-  if (message.type === 'CHAT_MESSAGE') {
-    handleChatMessage(message.message || '')
+  if (request.type === 'CHAT_MESSAGE') {
+    handleChatMessage(request.message || '')
       .then(response => sendResponse({ success: true, data: response }))
       .catch(error => sendResponse({ 
         success: false, 
@@ -124,26 +131,44 @@ async function handleChatMessage(message: string): Promise<any> {
 }
 
 async function handleApiRequest(request: MessageRequest): Promise<any> {
+  console.log('[Background] Starting API request:', request);
+
   if (!request.endpoint) {
     throw new Error('No endpoint specified');
   }
 
-  const response = await fetch(`${API_URL}${request.endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      ...request.data,
-      context: currentTabContext,
-    }),
-  });
+  try {
+    const url = `${API_URL}${request.endpoint}`;
+    console.log('[Background] Making fetch request to:', url);
+    console.log('[Background] Request data:', request.data);
 
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.statusText}`);
+    const fetchOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(request.data),
+    };
+
+    console.log('[Background] Fetch options:', fetchOptions);
+
+    const response = await fetch(url, fetchOptions);
+    console.log('[Background] Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[Background] Error response:', errorText);
+      throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    const responseData = await response.json();
+    console.log('[Background] Success response:', responseData);
+    return responseData;
+  } catch (error) {
+    console.error('[Background] Request failed:', error);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return response.json();
 }
 
 // Handle extension icon click

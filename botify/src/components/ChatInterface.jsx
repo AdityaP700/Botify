@@ -82,11 +82,7 @@ const ChatInterface = () => {
       } else {
         // Regular chat message
         const chatData = {
-          message: userMessage,
-          context: {
-            url: window.location.href,
-            title: document.title
-          }
+          message: userMessage
         };
 
         if (isExtension) {
@@ -100,9 +96,13 @@ const ChatInterface = () => {
           response = axiosResponse.data;
         }
 
+        if (!response) {
+          throw new Error('No response from chat endpoint');
+        }
+
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: response.response || 'No response received'
+          content: response.response
         }]);
       }
     } catch (error) {

@@ -1,0 +1,24 @@
+{
+    "qa_pairs": [
+        {
+            "question": "What is Python?",
+            "answer": "Python is a high-level, interpreted programming language known for its simplicity and readability. It supports multiple programming paradigms and has a large standard library."
+        },
+        {
+            "question": "How do I install Python packages?",
+            "answer": "You can install Python packages using pip, which is Python's package installer. Use the command 'pip install package_name' in your terminal or command prompt."
+        },
+        {
+            "question": "What are Python lists?",
+            "answer": "Python lists are ordered, mutable sequences that can hold different types of objects. They are created using square brackets [] and can be modified after creation."
+        },
+        {
+            "question": "How do you define a function in Python?",
+            "answer": "In Python, you define a function using the 'def' keyword followed by the function name and parameters in parentheses. The function body is indented below the definition."
+        },
+        {
+            "question": "What is a dictionary in Python?",
+            "answer": "A dictionary in Python is an unordered collection of key-value pairs. It is defined using curly braces {} and each key-value pair is separated by a colon."
+        }
+    ]
+}

@@ -10,6 +10,10 @@ import json
 from datetime import datetime
 from openai import OpenAI
 from database.pinecone_client import index
+from load_env import load_environment
+
+# Load environment variables
+load_environment()
 
 # Initialize logging with more detailed format
 logging.basicConfig(
@@ -21,7 +25,7 @@ logger = logging.getLogger(__name__)
 class Config:
     """Application configuration."""
     ALLOWED_ORIGINS = ["chrome-extension://*", "http://localhost:3000"]
-    MODEL_NAME = "text-embedding-3-small"
+    MODEL_NAME = "mixtral-8x7b-32768"  # Updated to latest GROQ model
     DEFAULT_TOP_K = 3
 
 class ChatMessage(BaseModel):
@@ -46,13 +50,33 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Add CORS middleware
+# Configure CORS and security headers middleware
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+from starlette.requests import Request
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:8000"
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Configure CORS with specific extension ID
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=Config.ALLOWED_ORIGINS,
+    allow_origins=[
+        "http://localhost:3001",
+        "http://localhost:3000",
+        "chrome-extension://*"  # Generic extension pattern
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Initialize clients
@@ -128,10 +152,15 @@ def format_context(context: Optional[Dict[str, Any]]) -> str:
     response_model=ChatResponse,
     responses={
         status.HTTP_200_OK: {"model": ChatResponse},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorResponse}
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorResponse},
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorResponse}
     }
 )
-async def chat_endpoint(request: ChatMessage):
+async def chat_endpoint(request: ChatMessage, request_obj: Request):
+    # Log request details
+    logger.info(f"Received request from: {request_obj.headers.get('origin', 'Unknown origin')}")
+    logger.info(f"Request headers: {dict(request_obj.headers)}")
+    
     try:
         # Get relevant context from Pinecone
         relevant_context = await get_relevant_context(request.message)
@@ -157,7 +186,7 @@ async def chat_endpoint(request: ChatMessage):
         
         # Generate response from Groq
         response = groq_client.chat.completions.create(
-            model="llama-3.2-11b-text-preview",
+            model="mixtral-8x7b-32768",
             messages=[
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": request.message}
@@ -171,16 +200,19 @@ async def chat_endpoint(request: ChatMessage):
         # Extract response content
         response_content = response.choices[0].message.content
         
-        # Log the interaction
+        # Log the successful interaction
+        logger.info(f"Successfully processed chat request from {request_obj.headers.get('origin', 'Unknown origin')}")
         logger.info(f"Chat interaction - User: {request.message[:100]}... Response: {response_content[:100]}...")
         
         return ChatResponse(response=response_content)
 
     except Exception as e:
-        logger.error(f"Error in chat endpoint: {str(e)}")
+        error_msg = f"Error processing chat request: {str(e)}"
+        logger.error(f"Error for request from {request_obj.headers.get('origin', 'Unknown origin')}: {error_msg}")
+        logger.exception(e)
         raise HTTPException(
             status_code=500,
-            detail=f"Error processing chat request: {str(e)}"
+            detail=error_msg
         )
 
 @app.get("/health")
